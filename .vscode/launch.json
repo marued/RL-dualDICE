@@ -1,0 +1,24 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run DualDice",
+            "type": "python",
+            "request": "launch",
+            "program": "${cwd}/run.py",
+            "console": "integratedTerminal",
+            "args": ["--logtostderr", "--env_name=grid", "--tabular_obs", "--num_trajectories=10"]
+        },
+        {
+            "name": "Run Sarsa",
+            "type": "python",
+            "request": "launch",
+            "program": "${cwd}/run_sarsa.py",
+            "console": "integratedTerminal",
+            "args": []
+        }
+    ]
+}
