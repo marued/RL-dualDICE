@@ -1,10 +1,11 @@
 from agents.tile_encoder import IHT
 import numpy as np
+import types
 
 
 class QEstimator:
 
-    def __init__(self, env_space, action_space, alpha, discount_factor=1.0):
+    def __init__(self, env_space, action_space, alpha):
         self.alpha = alpha # learning rate
         self.feature_space_size = int(env_space * action_space) 
         self.nb_states = env_space
@@ -12,8 +13,27 @@ class QEstimator:
 
         self.reset()
 
-    def update(self, state, action, target): # ex: target = REWARD + q_value[next_state, next_action]
-        self.q_value[state, action] += self.alpha * ( target - self.q_value[state, action])
+    def update(self, state, action, target, importance_sampling=1.0):
+        """
+        Description:
+        Single update step of q-values. 
+
+        Params:
+            state: The q value state we want to update. Used as index.
+            action: The q value action we want to update. Used as index.
+            target: The target provided by the agent algorithm. For example, 
+                SARA's target = REWARD + discount * q_value[next_state, next_action]
+                Q-Learning's target =  REWARD + discount * max_a(q_value[next_state, :])
+            importance_sampling (optional): If planning to use off-policy (SARSA), 
+                specify the importance_sampling that will be multiplied with the q-value
+                update. It's possible to pass in a function that takes state, action as arguments.
+                Default: 1.0 
+        """
+        ims_value = importance_sampling
+        if isinstance(importance_sampling, types.FunctionType):
+            ims_value = importance_sampling(state, action)
+
+        self.q_value[state, action] += self.alpha * ims_value *( target - self.q_value[state, action])
 
     def value(self, state, action):
         """
@@ -23,6 +43,7 @@ class QEstimator:
 
     def reset(self):
         self.q_value = np.zeros((self.nb_states, self.nb_actions))
+
 
 class QEstimatorTraceTileEncoding:
 
