@@ -33,10 +33,10 @@ def off_policy_run(env, behavior_policy, target_policy, agent, nb_episodes, max_
         done = False
         ret = 0
         state = env.reset()
-        action = behavior_policy(agent.q_estimator, state)
+        action = behavior_policy.get_action(agent.q_estimator, state)
         agent.start_new_episode()
         for step in range(max_nb_steps):
-            next_state, next_action, reward, done = agent.update(env, target_policy, state, action)
+            next_state, next_action, reward, done = agent.update(env, behavior_policy, target_policy, state, action)
             ret += reward
             if done:
                 break

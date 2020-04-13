@@ -4,7 +4,10 @@ import types
 
 
 class QEstimator:
-
+    """
+    Off, or on policy estimator. If you want to apply importance sampling, simply
+    provide a imp_sampler object when updating.
+    """
     def __init__(self, env_space, action_space, alpha):
         self.alpha = alpha # learning rate
         self.feature_space_size = int(env_space * action_space) 
@@ -12,8 +15,11 @@ class QEstimator:
         self.nb_actions = action_space
 
         self.reset()
+    
+    def reset(self):
+        self.q_value = np.zeros((self.nb_states, self.nb_actions))
 
-    def update(self, state, action, target, importance_sampling=1.0):
+    def update(self, state, action, target, importance_sampling=None):
         """
         Description:
         Single update step of q-values. 
@@ -24,14 +30,16 @@ class QEstimator:
             target: The target provided by the agent algorithm. For example, 
                 SARA's target = REWARD + discount * q_value[next_state, next_action]
                 Q-Learning's target =  REWARD + discount * max_a(q_value[next_state, :])
-            importance_sampling (optional): If planning to use off-policy (SARSA), 
-                specify the importance_sampling that will be multiplied with the q-value
-                update. It's possible to pass in a function that takes state, action as arguments.
-                Default: 1.0 
+            importance_sampling (optional): If planning to use off-policy (SARSA),
+                passing a sampler object will call calculate. IMPORTANT: you must pass 
+                all necessary information to object constructor or to importance_sampling.arguments
+                before calling update. Take a look at SarsaNStep for example. 
         """
-        ims_value = importance_sampling
-        if isinstance(importance_sampling, types.FunctionType):
-            ims_value = importance_sampling(state, action)
+        if importance_sampling is not None:
+            if isinstance(importance_sampling, types.FunctionType):
+                ims_value = importance_sampling.calculate()
+        else:
+            ims_value = 1
 
         self.q_value[state, action] += self.alpha * ims_value *( target - self.q_value[state, action])
 
@@ -41,8 +49,11 @@ class QEstimator:
         """
         return self.q_value[state, action]
 
-    def reset(self):
-        self.q_value = np.zeros((self.nb_states, self.nb_actions))
+    def start_new_episode(self):
+        """
+        Nothing to reset
+        """
+        pass
 
 
 class QEstimatorTraceTileEncoding:
@@ -55,8 +66,6 @@ class QEstimatorTraceTileEncoding:
         self.nb_tilings = nb_tilings
 
         self.iht = IHT(self.feature_space_size)
-        self.weights = np.zeros(self.feature_space_size)
-        self.trace = np.zeros(self.feature_space_size)
 
         self.alpha = alpha # learning rate of weigths
         self.lam = lam # trace fade factor
@@ -65,6 +74,12 @@ class QEstimatorTraceTileEncoding:
         # scaling for tiling, since bounderies are sliced at integer values. Ex: tiling_dim / (max - min)
         # This will respect tiling_dim for each tile
         self.min_max_scale = [ tiling_dim / (mm[1] - mm[0]) for mm in min_max]
+
+        self.reset()
+
+    def reset(self):
+        self.weights = np.zeros(self.feature_space_size)
+        self.trace = np.zeros(self.feature_space_size)
 
     def update(self, state, action, target):
         # Update trace
@@ -96,9 +111,9 @@ class QEstimatorTraceTileEncoding:
         active_weights = self.weights[features]
         return np.sum(active_weights)
 
-    def reset_trace(self):
+    def start_new_episode(self):
+        """
+        Reset the trace.
+        """
         self.trace = np.zeros(self.feature_space_size)
 
-    def reset(self):
-        self.weights = np.zeros(self.feature_space_size)
-        self.trace = np.zeros(self.feature_space_size)

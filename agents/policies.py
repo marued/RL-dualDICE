@@ -1,7 +1,11 @@
 import numpy as np
 
-def epsilon_greedy_policy(epsilon, action_space):
-    def policy(estimator, state): 
+class epsilon_greedy_policy:
+    def __init__(epsilon, action_space):
+        self.epsilon = epsilon
+        self.action_space = action_space
+
+    def get_action(estimator, state): 
         """
         Returns an action according to epsilon greedy policy
         """
@@ -14,4 +18,8 @@ def epsilon_greedy_policy(epsilon, action_space):
             
             return np.argmax(value_list)
 
-    return policy
+    def prob(estimator, action, state):
+        """
+        return the state action probability
+        """
+        #TODO
