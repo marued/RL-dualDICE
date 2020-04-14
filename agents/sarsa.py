@@ -1,5 +1,5 @@
 import math
-
+import numpy as np
 
 class Sarsa:
     """
@@ -45,8 +45,8 @@ class SarsaNStep:
         self.q_estimator = q_estimator
         self.discount_factor = discount_factor
         self.imp_sampler = imp_sampler
-        self.reset()
         self.n_step = n_step
+        self.reset()
 
     def start_new_episode(self):
         self.step_counter = 0
@@ -68,9 +68,9 @@ class SarsaNStep:
             self.actions.append(action)
 
         # Start of classic algorithm
-        if self.step_counter < T:
+        if self.step_counter < self.T:
             # Take a step
-            next_state, reward, done, _ = env.step(action)
+            next_state, reward, done, _ = env.step(self.actions[self.step_counter])
             self.rewards.append(reward)
             self.states.append(next_state)
 
@@ -86,7 +86,7 @@ class SarsaNStep:
         if tau >= 0:
             # Calculate target
             target = 0
-            for i in range(tau + 1, min(tau + self.n_step, self.T - 1)):
+            for i in range(tau + 1, min(tau + self.n_step, self.T) + 1):
                 target += np.power(self.discount_factor, i - tau - 1) * self.rewards[i]
             if tau + self.n_step < self.T:
                 next_q = self.q_estimator.value(self.states[tau + self.n_step], self.actions[tau + self.n_step])
@@ -95,6 +95,7 @@ class SarsaNStep:
             # Update
             if self.imp_sampler is not None:
                 self.imp_sampler.arguments = (self.states, self.actions, tau, self.n_step, self.T) 
-            self.q_estimator.update(state, action, target, importance_sampling=self.imp_sampler)
+            self.q_estimator.update(self.states[tau], self.actions[tau], target, importance_sampling=self.imp_sampler)
 
+        self.step_counter += 1
         return None, None, reward, done

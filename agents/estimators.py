@@ -36,8 +36,7 @@ class QEstimator:
                 before calling update. Take a look at SarsaNStep for example. 
         """
         if importance_sampling is not None:
-            if isinstance(importance_sampling, types.FunctionType):
-                ims_value = importance_sampling.calculate()
+            ims_value = importance_sampling.calculate(self)
         else:
             ims_value = 1
 
