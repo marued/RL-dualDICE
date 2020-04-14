@@ -62,7 +62,7 @@ class SarsaNStep:
     def update(self, env, behavior_policy, state, action):
         # First action and state we want to keep. We return None to make sure 
         # not to add it twice.
-        reward = None
+        reward = 0
         if state is not None and action is not None:
             self.states.append(state)
             self.actions.append(action)
@@ -98,4 +98,5 @@ class SarsaNStep:
             self.q_estimator.update(self.states[tau], self.actions[tau], target, importance_sampling=self.imp_sampler)
 
         self.step_counter += 1
-        return None, None, reward, done
+        stop = True if tau == self.T - 1 else False
+        return None, None, reward, stop

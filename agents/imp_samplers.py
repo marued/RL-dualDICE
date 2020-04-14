@@ -17,7 +17,7 @@ class NStepImportanceSampling:
         """
         self.ro = 1
         state_list, action_list, tau, n, T = self.arguments
-        for i in range(tau + 1, min(tau + n-1, T-1) + 1):
+        for i in range(tau + 1, min(tau + n, T - 1) + 1):
             action, state = (action_list[i], state_list[i])
             self.ro *= self.target_policy.prob(estimator, state)[action] / self.behavior_policy.prob(estimator, state)[action]
 
