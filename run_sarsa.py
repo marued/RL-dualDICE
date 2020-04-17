@@ -52,13 +52,15 @@ def test_run(env, policy, q_estimator):
     state = env.reset()
     action = policy.get_action(q_estimator, state)
     total_return = 0
+    steps = 0
     while not done:
         env.render()
         next_state, reward, done, _ = env.step(action)
         state = next_state
         action = policy.get_action(q_estimator, state)
         total_return += reward
-    print(total_return)
+        steps += 1
+    print("Return:", total_return, ", steps:", steps)
 
 
 if __name__ == "__main__":
@@ -85,8 +87,8 @@ if __name__ == "__main__":
     n_step_estimator = QEstimator(env.nS, env.nA, alpha)
     n_step_sarsa = SarsaNStep(n_step_estimator, imp_sampler=None, n_step=2, discount_factor=discount_factor)
 
-    episode_returns = on_policy_run(env, eps_policy, n_step_sarsa, nb_episodes=1000, max_nb_steps=1001)
-    test_run(env, eps_policy, n_step_sarsa.q_estimator)
+    #episode_returns = on_policy_run(env, eps_policy, n_step_sarsa, nb_episodes=1000, max_nb_steps=1001)
+    #test_run(env, eps_policy, n_step_sarsa.q_estimator)
 
     #####################################################
     # Off policy n-step Sarsa with importance sampling
@@ -95,8 +97,7 @@ if __name__ == "__main__":
     max_policy = EpsilonGreedyPolicy(0.0, env.nA)
     n_step_sampler = NStepImportanceSampling(behavior_policy=eps_policy, target_policy=max_policy)
     n_step_estimator = QEstimator(env.nS, env.nA, alpha)
-    n_step_sarsa = SarsaNStep(n_step_estimator, imp_sampler=n_step_sampler, n_step=2, discount_factor=discount_factor)
+    n_step_sarsa = SarsaNStep(n_step_estimator, imp_sampler=n_step_sampler, n_step=2, discount_factor=0.95)
 
-    episode_returns = off_policy_run(env, eps_policy, max_policy, n_step_sarsa, nb_episodes=1000, max_nb_steps=1001)
-    # TODO: should we use target policy or behavior policy when testing?????
-    test_run(env, eps_policy, n_step_sarsa.q_estimator)
+    episode_returns = off_policy_run(env, eps_policy, max_policy, n_step_sarsa, nb_episodes=10000, max_nb_steps=500)
+    test_run(env, max_policy, n_step_sarsa.q_estimator)

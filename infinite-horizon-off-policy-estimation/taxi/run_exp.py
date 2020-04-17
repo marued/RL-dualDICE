@@ -5,8 +5,12 @@ import optparse
 import subprocess
 import numpy as np
 from Density_Ratio_discrete import Density_Ratio_discrete, Density_Ratio_discounted
-from Q_learning import Q_learning
+from Q_learning import Q_learning as Q_learning_class
 from environment import random_walk_2d, taxi
+
+from algos.dual_dice import TabularDualDice
+from transition_data import TrajectoryData
+from policy import TabularPolicy
 # import matplotlib
 # matplotlib.use('Agg')
 # import matplotlib.pyplot as plt
@@ -28,7 +32,7 @@ def roll_out(state_num, env, policy, num_trajectory, truncate_size):
 			action = np.random.choice(p_action.shape[0], 1, p = p_action)[0]
 			next_state, reward = env.step(action)
 
-			sasr.append((state, action, next_state, reward))
+			sasr.append( (state, action, next_state, reward) )
 			frequency[state] += 1
 			total_reward += reward
 			#print env.state_decoding(state)
@@ -158,7 +162,7 @@ def weighted_importance_sampling_estimator_stepwise(SASR, policy0, policy1, gamm
 
 
 def Q_learning(env, num_trajectory, truncate_size, temperature = 2.0):
-	agent = Q_learning(n_state, n_action, 0.01, 0.99)
+	agent = Q_learning_class(n_state, n_action, 0.01, 0.99)
 
 	state = env.reset()
 	for k in range(20):
@@ -228,6 +232,16 @@ def model_based(n_state, n_action, SASR, pi, gamma):
 	Rpi = np.sum(R * pi, axis = -1)
 	return np.sum(dpi.reshape(-1) * Rpi)
 
+def dual_dice(n_state, n_action, SASR, pi1, gamma):
+	"""No need for behavior policy
+	"""
+	# base = TabularPolicy(pi0) # no need for base policy
+	target = TabularPolicy(pi1)
+	SARS = np.array(SASR)[:,:,[0,1,3,2]]
+	data = TrajectoryData(SARS)
+	dual_dice_obj = TabularDualDice(n_state, n_action, gamma, solve_for_state_action_ratio=True)
+	return dual_dice_obj.solve(data, target)
+
 def run_experiment(n_state, n_action, SASR, pi0, pi1, gamma):
 	
 	den_discrete = Density_Ratio_discounted(n_state, gamma)
@@ -241,13 +255,14 @@ def run_experiment(n_state, n_action, SASR, pi0, pi1, gamma):
 	est_ISS = importance_sampling_estimator_stepwise(SASR, pi0, pi1, gamma)
 	est_WIST = weighted_importance_sampling_estimator(SASR, pi0, pi1, gamma)
 	est_WISS = weighted_importance_sampling_estimator_stepwise(SASR, pi0, pi1, gamma)
+	dual_dice_return = dual_dice(n_state, n_action, SASR, pi1, gamma)
 	
 	est_model_based = model_based(n_state, n_action, SASR, pi1, gamma)
 	#return est_model_based
-	return est_DENR, est_naive_average, est_IST, est_ISS, est_WIST, est_WISS, est_model_based
+	return est_DENR, est_naive_average, est_IST, est_ISS, est_WIST, est_WISS, est_model_based, dual_dice_return
 
 if __name__ == '__main__':
-	estimator_name = ['On Policy', 'Density Ratio', 'Naive Average', 'IST', 'ISS', 'WIST', 'WISS', 'Model Based']
+	estimator_name = ['On Policy', 'Density Ratio', 'Naive Average', 'IST', 'ISS', 'WIST', 'WISS', 'Model Based', 'DualDICE']
 	length = 5
 	env = taxi(length)
 	n_state = env.n_state
@@ -266,12 +281,12 @@ if __name__ == '__main__':
 	behavior_ID = 4
 	target_ID = 5
 	
-	pi_target = np.load(os.getcwd() + '/taxi/taxi-policy/pi19.npy')
+	pi_target = np.load(os.getcwd() + '/infinite-horizon-off-policy-estimation/taxi/taxi-policy/pi19.npy')
 	alpha = 0.0 # mixture ratio
 	nt = args.nt # num_trajectory
 	ts = args.ts # truncate_size
 	gm = args.gm # gamma
-	pi_behavior = np.load(os.getcwd() + '/taxi/taxi-policy/pi18.npy')
+	pi_behavior = np.load(os.getcwd() + '/infinite-horizon-off-policy-estimation/taxi/taxi-policy/pi18.npy')
 
 	pi_behavior = alpha * pi_target + (1-alpha) * pi_behavior
 

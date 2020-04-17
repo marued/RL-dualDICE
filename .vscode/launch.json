@@ -19,6 +19,17 @@
             "program": "${cwd}/run_sarsa.py",
             "console": "integratedTerminal",
             "args": []
+        },
+        {
+            "name": "Run all experiments",
+            "type": "python",
+            "request": "launch",
+            "program": "${cwd}/infinite-horizon-off-policy-estimation/taxi/run_exp.py",
+            "console": "integratedTerminal",
+            "args": [],
+            "env":{
+                "PYTHONPATH": "${cwd}"
+            }
         }
     ]
 }

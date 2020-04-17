@@ -91,9 +91,10 @@ class TabularDualDice(base_algo.BaseAlgo):
       total_weights[nu_index] += weight
 
       next_probs = target_policy.get_probabilities(transition.next_state)
-      policy_ratio = policy_lib.get_policy_ratio(data.policy, target_policy,
-                                                 transition.state,
-                                                 transition.action)
+      if not self._solve_for_state_action_ratio:
+        policy_ratio = policy_lib.get_policy_ratio(data.policy, target_policy,
+                                                  transition.state,
+                                                  transition.action)
 
       # Need to weight next nu by importance weight.
       next_weight = (weight if self._solve_for_state_action_ratio else

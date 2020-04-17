@@ -12,6 +12,8 @@ class Q_learning(object):
 		self.Q[s,a] = (1-self.alpha)*self.Q[s,a] + self.alpha * (r + self.gamma * np.max(self.Q[sNext]))
 
 	def choose_action(self, s, temperature):
+		"""Boltzman policy
+		"""
 		p = np.exp(1.0/temperature * self.Q[s])
 		p = p/ np.sum(p)
 		action = np.random.choice(p.shape[0], 1, p = p)
