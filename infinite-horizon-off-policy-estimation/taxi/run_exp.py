@@ -4,6 +4,9 @@ import argparse
 import optparse
 import subprocess
 import numpy as np
+import concurrent.futures
+import multiprocessing
+from functools import partial
 from Density_Ratio_discrete import Density_Ratio_discrete, Density_Ratio_discounted
 from Q_learning import Q_learning as Q_learning_class
 from environment import random_walk_2d, taxi
@@ -261,6 +264,20 @@ def run_experiment(n_state, n_action, SASR, pi0, pi1, gamma):
 	#return est_model_based
 	return est_DENR, est_naive_average, est_IST, est_ISS, est_WIST, est_WISS, est_model_based, dual_dice_return
 
+def run_wrapper(n_state, n_action, env, roll_out, on_policy, estimator_name, pi_behavior, 
+				pi_target, nt, ts, gm, k):
+	res =  np.zeros((len(estimator_name)))
+	np.random.seed(k)
+	SASR0, _, _ = roll_out(n_state, env, pi_behavior, nt, ts)
+	res[1:] = run_experiment(n_state, n_action, np.array(SASR0), pi_behavior, pi_target, gm)
+	
+	np.random.seed(k)
+	SASR, _, _ = roll_out(n_state, env, pi_target, nt, ts)
+	res[0] = on_policy(np.array(SASR), gm)
+
+	
+	return res, k
+
 if __name__ == '__main__':
 	estimator_name = ['On Policy', 'Density Ratio', 'Naive Average', 'IST', 'ISS', 'WIST', 'WISS', 'Model Based', 'DualDICE']
 	length = 5
@@ -268,7 +285,7 @@ if __name__ == '__main__':
 	n_state = env.n_state
 	n_action = env.n_action
 	
-	num_trajectory = 200
+	num_trajectory = 1000
 	truncate_size = 400
 	gamma = 0.99
 
@@ -286,24 +303,27 @@ if __name__ == '__main__':
 	nt = args.nt # num_trajectory
 	ts = args.ts # truncate_size
 	gm = args.gm # gamma
-	pi_behavior = np.load(os.getcwd() + '/infinite-horizon-off-policy-estimation/taxi/taxi-policy/pi1.npy')
+	pi_behavior = np.load(os.getcwd() + '/infinite-horizon-off-policy-estimation/taxi/taxi-policy/pi18.npy')
 
 	pi_behavior = alpha * pi_target + (1-alpha) * pi_behavior
 
 	res = np.zeros((len(estimator_name), 20), dtype = np.float32)
-	for k in range(20):
-		np.random.seed(k)
-		SASR0, _, _ = roll_out(n_state, env, pi_behavior, nt, ts)
-		res[1:,k] = run_experiment(n_state, n_action, np.array(SASR0), pi_behavior, pi_target, gm)
-		
-		np.random.seed(k)
-		SASR, _, _ = roll_out(n_state, env, pi_target, nt, ts)
-		res[0, k] = on_policy(np.array(SASR), gm)
 
+	# run experiments in paralel:
+	seeds = range(12)
+	lam_fct = partial(run_wrapper, n_state, n_action, env, roll_out, on_policy, estimator_name, pi_behavior, 
+				pi_target, nt, ts, gm)
+	with concurrent.futures.ProcessPoolExecutor(int(multiprocessing.cpu_count() / 2)) as executor:
+		for ret, k in executor.map(lam_fct, seeds):
+			res[:, k] = ret
+
+	for k in seeds:
 		print('------seed = {}------'.format(k))
 		for i in range(len(estimator_name)):
 			print('  ESTIMATOR: '+estimator_name[i]+ ', rewards = {}'.format(res[i,k]))
 		print('----------------------')
 		sys.stdout.flush()
-	np.save('result/nt={}ts={}gm={}.npy'.format(nt,ts,gm), res)
+	if not os.path.exists(os.getcwd() + "/result"):
+		os.mkdir(os.getcwd() + "/result")
+	np.save(os.getcwd() + '/result/nt={}ts={}gm={}.npy'.format(nt,ts,gm), res)
 	
