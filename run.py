@@ -49,7 +49,7 @@ flags.DEFINE_float('alpha', 0.0,
                    'behavior policy that is closer to target policy.')
 flags.DEFINE_float('gamma', 0.995, 'Discount factor.')
 flags.DEFINE_bool('tabular_obs', True, 'Use tabular observations?')
-flags.DEFINE_bool('tabular_solver', False, 'Use tabular solver?')
+flags.DEFINE_bool('tabular_solver', True, 'Use tabular solver?')
 flags.DEFINE_string('env_name', 'Taxi-v2', 'Environment to evaluate on.')
 flags.DEFINE_string('solver_name', 'dice', 'Type of solver to use.')
 flags.DEFINE_string('save_dir', None, 'Directory to save results to.')

@@ -270,7 +270,7 @@ if __name__ == '__main__':
 	
 	num_trajectory = 200
 	truncate_size = 400
-	gamma = 1.0
+	gamma = 0.99
 
 	parser = argparse.ArgumentParser(description='taxi environment')
 	parser.add_argument('--nt', type = int, required = False, default = num_trajectory)
@@ -286,11 +286,11 @@ if __name__ == '__main__':
 	nt = args.nt # num_trajectory
 	ts = args.ts # truncate_size
 	gm = args.gm # gamma
-	pi_behavior = np.load(os.getcwd() + '/infinite-horizon-off-policy-estimation/taxi/taxi-policy/pi18.npy')
+	pi_behavior = np.load(os.getcwd() + '/infinite-horizon-off-policy-estimation/taxi/taxi-policy/pi1.npy')
 
 	pi_behavior = alpha * pi_target + (1-alpha) * pi_behavior
 
-	res = np.zeros((8, 20), dtype = np.float32)
+	res = np.zeros((len(estimator_name), 20), dtype = np.float32)
 	for k in range(20):
 		np.random.seed(k)
 		SASR0, _, _ = roll_out(n_state, env, pi_behavior, nt, ts)
@@ -301,7 +301,7 @@ if __name__ == '__main__':
 		res[0, k] = on_policy(np.array(SASR), gm)
 
 		print('------seed = {}------'.format(k))
-		for i in range(8):
+		for i in range(len(estimator_name)):
 			print('  ESTIMATOR: '+estimator_name[i]+ ', rewards = {}'.format(res[i,k]))
 		print('----------------------')
 		sys.stdout.flush()
