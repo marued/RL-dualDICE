@@ -152,6 +152,8 @@ if __name__ == "__main__":
     nt_list = [200, 500, 1000, 2000]
     gm_list = [0.999, 0.9, 0.8, 0.7, 0.5]
     alpha_list = [0.0, 0.2, 0.5, 0.7]
+    alpha_list2 = [0.0, 0.33, 0.66]
+    nt_list2 = [500, 1000, 2000, 3000, 5000]
     if run_data_gen:
         # Number of trajectories
         results = varying_number_trajectories(estimator_names, nt_list)
@@ -165,22 +167,20 @@ if __name__ == "__main__":
         results = varying_target_mixture(estimator_names, alpha_list)
         np.save(os.getcwd() + '/result/varying_target_alpha_{}.npy'.format("_".join([str(i) for i in alpha_list])), results)
 
-    # Reproducing graph in dual dice for taxi
-    alpha_list = [0.0, 0.33, 0.66]
-    nt_list = [500, 1000, 2000, 3000]
-    results = varying_trajectories_and_alpha(estimator_names, nt_list, alpha_list)
-    np.save(os.getcwd() + '/result/varying_alpha_and_nt_({})_({}).npy'.format(
-        "_".join([str(i) for i in alpha_list]),
-        "_".join([str(i) for i in nt_list])),
-        results)
+        # Reproducing graph in dual dice for taxi
+        results = varying_trajectories_and_alpha(estimator_names, nt_list2, alpha_list2)
+        np.save(os.getcwd() + '/result/varying_alpha_and_nt_({})_({}).npy'.format(
+            "_".join([str(i) for i in alpha_list2]),
+            "_".join([str(i) for i in nt_list2])),
+            results)
     
     # plot
     trajectory_results = np.load( os.getcwd() + '/result/varying_nb_trajectories_{}.npy'.format("_".join([str(i) for i in nt_list])) )
     gamma_results = np.load( os.getcwd() + '/result/varying_gamma_{}.npy'.format("_".join([str(i) for i in gm_list])) )
     misture_policy_results = np.load( os.getcwd() + '/result/varying_target_alpha_{}.npy'.format("_".join([str(i) for i in alpha_list])) )
-    alpha_trajectories_results = np.load(os.getcwd() + '/result/varying_alpha_and_nt_({})_().npy'.format(
-        "_".join([str(i) for i in alpha_list]),
-        "_".join([str(i) for i in nt_list])))
+    alpha_trajectories_results = np.load(os.getcwd() + '/result/varying_alpha_and_nt_({})_({}).npy'.format(
+        "_".join([str(i) for i in alpha_list2]),
+        "_".join([str(i) for i in nt_list2])))
 
     trajectory_results_min = trajectory_results.min(axis=-1)
     trajectory_results_mean = trajectory_results.mean(axis=-1)
@@ -221,26 +221,36 @@ if __name__ == "__main__":
 
     # Reproducing graph
     plt.subplot(131)# alpha = 0.0
-    plt.plot(gm_list, alpha_trajectories_mean[0, :, 0],
-            gm_list, alpha_trajectories_mean[0, :, -1])
-    plt.fill_between(alpha_list, alpha_trajectories_min[0, :, 0], alpha_trajectories_max[0, :, 0], color='grey', alpha=0.5)
-    plt.fill_between(alpha_list, alpha_trajectories_min[0, :, -1], alpha_trajectories_max[0, :, -1], color='pink', alpha=0.5)
+    plt.plot(nt_list2, alpha_trajectories_mean[0, :, 0], 'orange', label=estimator_names[0]) # On policy
+    plt.plot(nt_list2, alpha_trajectories_mean[0, :, 1] , 'green', label=estimator_names[1]) # Density Ratio
+    plt.plot(nt_list2, alpha_trajectories_mean[0, :, 4] , 'blue', label=estimator_names[4]) # ISS
+    plt.plot(nt_list2, alpha_trajectories_mean[0, :, -1], 'red', label=estimator_names[-1]) # dual diace
+    plt.fill_between(nt_list2, alpha_trajectories_min[0, :, 0], alpha_trajectories_max[0, :, 0], color='orange', alpha=0.5)
+    plt.fill_between(nt_list2, alpha_trajectories_min[0, :, 1], alpha_trajectories_max[0, :, 1], color='green', alpha=0.2)
+    plt.fill_between(nt_list2, alpha_trajectories_min[0, :, 4], alpha_trajectories_max[0, :, 4], color='blue', alpha=0.2)
+    plt.fill_between(nt_list2, alpha_trajectories_min[0, :, -1], alpha_trajectories_max[0, :, -1], color='pink', alpha=0.5)
 
     plt.subplot(132) # alpha = 0.33
-    plt.plot(gm_list, alpha_trajectories_mean[1, :, 0],
-            gm_list, alpha_trajectories_mean[1, :, -1])
-    plt.fill_between(alpha_list, alpha_trajectories_min[1, :, 0], alpha_trajectories_max[1, :, 0], color='grey', alpha=0.5)
-    plt.fill_between(alpha_list, alpha_trajectories_min[1, :, -1], alpha_trajectories_max[1, :, -1], color='pink', alpha=0.5)
+    plt.plot(nt_list2, alpha_trajectories_mean[1, :, 0], 'orange', label=estimator_names[0]) # On policy
+    plt.plot(nt_list2, alpha_trajectories_mean[1, :, 1] , 'green', label=estimator_names[1]) # Density Ratio
+    plt.plot(nt_list2, alpha_trajectories_mean[1, :, 4] , 'blue', label=estimator_names[4]) # ISS
+    plt.plot(nt_list2, alpha_trajectories_mean[1, :, -1], 'red', label=estimator_names[-1]) # dual diace
+    plt.fill_between(nt_list2, alpha_trajectories_min[1, :, 0], alpha_trajectories_max[1, :, 0], color='orange', alpha=0.5)
+    plt.fill_between(nt_list2, alpha_trajectories_min[1, :, 1], alpha_trajectories_max[1, :, 1], color='green', alpha=0.2)
+    plt.fill_between(nt_list2, alpha_trajectories_min[1, :, 4], alpha_trajectories_max[1, :, 4], color='blue', alpha=0.2)
+    plt.fill_between(nt_list2, alpha_trajectories_min[1, :, -1], alpha_trajectories_max[1, :, -1], color='pink', alpha=0.5)
 
     plt.subplot(133) # alpha = 0.66
-    plt.plot(gm_list, alpha_trajectories_mean[2, :, 0],
-            gm_list, alpha_trajectories_mean[2, :, -1])
-    plt.fill_between(alpha_list, alpha_trajectories_min[2, :, 0], alpha_trajectories_max[2, :, 0], color='grey', alpha=0.5)
-    plt.fill_between(alpha_list, alpha_trajectories_min[2, :, -1], alpha_trajectories_max[2, :, -1], color='pink', alpha=0.5)
+    plt.plot(nt_list2, alpha_trajectories_mean[2, :, 0], 'orange', label=estimator_names[0]) # On policy
+    plt.plot(nt_list2, alpha_trajectories_mean[2, :, 1] , 'green', label=estimator_names[1]) # Density Ratio
+    plt.plot(nt_list2, alpha_trajectories_mean[2, :, 4] , 'blue', label=estimator_names[4]) # ISS
+    plt.plot(nt_list2, alpha_trajectories_mean[2, :, -1], 'red', label=estimator_names[-1]) # dual diace
+    plt.fill_between(nt_list2, alpha_trajectories_min[2, :, 0], alpha_trajectories_max[2, :, 0], color='orange', alpha=0.5)
+    plt.fill_between(nt_list2, alpha_trajectories_min[2, :, 1], alpha_trajectories_max[2, :, 1], color='green', alpha=0.2)
+    plt.fill_between(nt_list2, alpha_trajectories_min[2, :, 4], alpha_trajectories_max[2, :, 4], color='blue', alpha=0.2)
+    plt.fill_between(nt_list2, alpha_trajectories_min[2, :, -1], alpha_trajectories_max[2, :, -1], color='pink', alpha=0.5)
+    plt.legend()
     plt.show()
     
-
-    pass
-
 
 
