@@ -30,6 +30,17 @@
             "env":{
                 "PYTHONPATH": "${cwd}"
             }
+        },
+        {
+            "name": "Run graphs experiments",
+            "type": "python",
+            "request": "launch",
+            "program": "${cwd}/infinite-horizon-off-policy-estimation/taxi/run_graphs.py",
+            "console": "integratedTerminal",
+            "args": [],
+            "env":{
+                "PYTHONPATH": "${cwd}"
+            }
         }
     ]
 }

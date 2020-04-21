@@ -313,7 +313,7 @@ if __name__ == '__main__':
 	seeds = range(12)
 	lam_fct = partial(run_wrapper, n_state, n_action, env, roll_out, on_policy, estimator_name, pi_behavior, 
 				pi_target, nt, ts, gm)
-	with concurrent.futures.ProcessPoolExecutor(int(multiprocessing.cpu_count() / 2)) as executor:
+	with concurrent.futures.ProcessPoolExecutor(int(multiprocessing.cpu_count() / 4)) as executor:
 		for ret, k in executor.map(lam_fct, seeds):
 			res[:, k] = ret
 
@@ -323,6 +323,8 @@ if __name__ == '__main__':
 			print('  ESTIMATOR: '+estimator_name[i]+ ', rewards = {}'.format(res[i,k]))
 		print('----------------------')
 		sys.stdout.flush()
+
+	# Save results
 	if not os.path.exists(os.getcwd() + "/result"):
 		os.mkdir(os.getcwd() + "/result")
 	np.save(os.getcwd() + '/result/nt={}ts={}gm={}.npy'.format(nt,ts,gm), res)
