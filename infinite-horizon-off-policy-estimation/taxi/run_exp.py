@@ -256,15 +256,16 @@ def run_experiment(n_state, n_action, SASR, pi0, pi1, gamma):
 	est_naive_average = on_policy(SASR, gamma)
 	est_IST = importance_sampling_estimator(SASR, pi0, pi1, gamma)
 	est_ISS = importance_sampling_estimator_stepwise(SASR, pi0, pi1, gamma)
-	est_WIST = weighted_importance_sampling_estimator(SASR, pi0, pi1, gamma)
-	est_WISS = weighted_importance_sampling_estimator_stepwise(SASR, pi0, pi1, gamma)
+	#est_WIST = weighted_importance_sampling_estimator(SASR, pi0, pi1, gamma)
+	#est_WISS = weighted_importance_sampling_estimator_stepwise(SASR, pi0, pi1, gamma)
 	dual_dice_return = dual_dice(n_state, n_action, SASR, pi1, gamma)
 	
-	est_model_based = model_based(n_state, n_action, SASR, pi1, gamma)
+	#est_model_based = model_based(n_state, n_action, SASR, pi1, gamma)
 	#return est_model_based
-	return est_DENR, est_naive_average, est_IST, est_ISS, est_WIST, est_WISS, est_model_based, dual_dice_return
+	return est_DENR, est_naive_average, est_IST, est_ISS, dual_dice_return
+	#return est_DENR, est_naive_average, est_IST, est_ISS, est_WIST, est_WISS, est_model_based, dual_dice_return
 
-def run_wrapper(n_state, n_action, env, roll_out, on_policy, estimator_name, pi_behavior, 
+def run_wrapper(n_state, n_action, env, roll_out, estimator_name, pi_behavior, 
 				pi_target, nt, ts, gm, k):
 	res =  np.zeros((len(estimator_name)))
 	np.random.seed(k)
@@ -311,7 +312,7 @@ if __name__ == '__main__':
 
 	# run experiments in paralel:
 	seeds = range(12)
-	lam_fct = partial(run_wrapper, n_state, n_action, env, roll_out, on_policy, estimator_name, pi_behavior, 
+	lam_fct = partial(run_wrapper, n_state, n_action, env, roll_out, estimator_name, pi_behavior, 
 				pi_target, nt, ts, gm)
 	with concurrent.futures.ProcessPoolExecutor(int(multiprocessing.cpu_count() / 4)) as executor:
 		for ret, k in executor.map(lam_fct, seeds):

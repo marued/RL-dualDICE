@@ -41,6 +41,17 @@
             "env":{
                 "PYTHONPATH": "${cwd}"
             }
+        },
+        {
+            "name": "Run estimate true value",
+            "type": "python",
+            "request": "launch",
+            "program": "${cwd}/infinite-horizon-off-policy-estimation/taxi/estimating_true_value.py",
+            "console": "integratedTerminal",
+            "args": [],
+            "env":{
+                "PYTHONPATH": "${cwd}"
+            }
         }
     ]
 }
