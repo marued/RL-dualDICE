@@ -197,17 +197,19 @@ def varying_trajectories_and_length(estimator_names, nt_list, ts_list):
     return results
 
 if __name__ == "__main__":
-    estimator_names = ['On Policy', 'Density Ratio', 'Naive Average', 'IST', 'ISS', 'WIST', 'WISS', 'Model Based', 'DualDICE']
+    # estimator_names = ['On Policy', 'Density Ratio', 'Naive Average', 'IST', 'ISS', 'WIST', 'WISS', 'Model Based', 'DualDICE']
+    estimator_names = ['On Policy', 'Density Ratio', 'Naive Average', 'IST', 'ISS', 'DualDICE']
     
     if not os.path.exists(os.getcwd() + "/result"):
             os.mkdir(os.getcwd() + "/result")
 
-    run_data_gen = False
+    run_data_gen = True
     nt_list = [200, 500, 1000, 2000]
     gm_list = [0.999, 0.9, 0.8, 0.7, 0.5]
     alpha_list = [0.0, 0.2, 0.5, 0.7]
     alpha_list2 = [0.0, 0.33, 0.66]
-    nt_list2 = [500, 1000, 2000, 3000, 5000]
+#    nt_list2 = [500, 1000, 2000, 3000, 5000]
+    nt_list2 = [500, 1000]
     nt_list3 = [50, 100, 200, 400]
     ts_list3 = [50, 100, 200, 400]
     if run_data_gen:
