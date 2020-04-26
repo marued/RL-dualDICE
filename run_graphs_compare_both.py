@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from functools import partial
 import multiprocessing
+import argparse
 
 from infinite_horizon_off_policy_estimation.taxi.environment import taxi
 from infinite_horizon_off_policy_estimation.taxi.experiments import roll_out
@@ -33,7 +34,7 @@ def varying_number_trajectories(estimator_names, nt_list = [200, 500, 1000, 2000
     for idx, nt in enumerate(nt_list):
         lam_fct = partial(run_wrapper, n_state, n_action, env, roll_out, estimator_names, pi_behavior, 
                           pi_target, nt, ts, gm)
-        ret = run_seeds_in_parallel(int(multiprocessing.cpu_count() / 4), lam_fct, estimator_names, nb_seeds)
+        ret = run_seeds_in_parallel(int(multiprocessing.cpu_count() / 2), lam_fct, estimator_names, nb_seeds)
         results[idx, :, :] = ret
 
     return results
@@ -64,7 +65,7 @@ def varying_gamma(estimator_names, gm_list):
     for idx, gm in enumerate(gm_list):
         lam_fct = partial(run_wrapper, n_state, n_action, env, roll_out, estimator_names, pi_behavior, 
                           pi_target, nt, ts, gm)
-        ret = run_seeds_in_parallel(int(multiprocessing.cpu_count() / 4), lam_fct, estimator_names, nb_seeds)
+        ret = run_seeds_in_parallel(int(multiprocessing.cpu_count() / 2), lam_fct, estimator_names, nb_seeds)
         results[idx, :, :] = ret
 
     return results
@@ -94,7 +95,7 @@ def varying_target_mixture(estimator_names, alpha_list):
         pi_behavior = alpha * pi_target + (1-alpha) * pi_behavior
         lam_fct = partial(run_wrapper, n_state, n_action, env, roll_out, estimator_names, pi_behavior, 
                           pi_target, nt, ts, gm)
-        ret = run_seeds_in_parallel(int(multiprocessing.cpu_count() / 4), lam_fct, estimator_names, nb_seeds)
+        ret = run_seeds_in_parallel(int(multiprocessing.cpu_count() / 2), lam_fct, estimator_names, nb_seeds)
         results[idx, :, :] = ret
 
     return results
@@ -124,7 +125,7 @@ def varying_trajectories_and_alpha(estimator_names, nt_list, alpha_list):
             pi_behavior = alpha * pi_target + (1-alpha) * pi_behavior
             lam_fct = partial(run_wrapper, n_state, n_action, env, roll_out, estimator_names, pi_behavior, 
                             pi_target, nt, ts, gm)
-            ret = run_seeds_in_parallel(int(multiprocessing.cpu_count() / 4), lam_fct, estimator_names, nb_seeds)
+            ret = run_seeds_in_parallel(int(multiprocessing.cpu_count() / 2), lam_fct, estimator_names, nb_seeds)
             results[i, j, :, :] = ret
 
     return results
@@ -188,12 +189,16 @@ def varying_trajectories_and_length(estimator_names, nt_list, ts_list):
     return results
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--only_display_graphs", default=False, type=bool, 
+                        help="Don't run new experiments, only display current saved ones when set to True. Default: False")
+    args = parser.parse_args()
+
     estimator_names = ['On Policy', 'Density Ratio', 'Naive Average', 'IST', 'ISS', 'WIST', 'WISS', 'Model Based', 'DualDICE']
     
     if not os.path.exists(os.getcwd() + "/result"):
             os.mkdir(os.getcwd() + "/result")
 
-    run_data_gen = True
     nt_list = [200, 500, 1000, 2000]
     gm_list = [0.999, 0.9, 0.8, 0.7, 0.5]
     alpha_list = [0.0, 0.2, 0.5, 0.7]
@@ -201,7 +206,7 @@ if __name__ == "__main__":
     nt_list2 = [500, 1000, 2000, 3000, 5000]
     nt_list3 = [50, 100, 200, 400]
     ts_list3 = [50, 100, 200, 400]
-    if run_data_gen:
+    if not args.only_display_graphs:
         # Number of trajectories
         results = varying_number_trajectories(estimator_names, nt_list)
         np.save(os.getcwd() + '/result/varying_nb_trajectories_{}.npy'.format("_".join([str(i) for i in nt_list])), results)
