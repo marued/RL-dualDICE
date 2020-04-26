@@ -27,7 +27,7 @@ def on_policy_run(env, policy, agent, nb_episodes, max_nb_steps):
 
 def off_policy_run(env, behavior_policy, target_policy, agent, nb_episodes, max_nb_steps):
     """
-    TODO target policy not being used for Sarsa since it part of the imortance sampler only...
+    Target policy not being used for Sarsa since it's part of the imortance sampler only (the estimator update)...
     """
     episode_returns = np.empty([nb_episodes])
     env._max_episode_steps = max_nb_steps
@@ -65,6 +65,7 @@ def test_run(env, policy, q_estimator):
 
 if __name__ == "__main__":
     
+    # TODO take the modified infinite horizon version
     env = gym.make('Taxi-v3')  
 
     discount_factor=0.999

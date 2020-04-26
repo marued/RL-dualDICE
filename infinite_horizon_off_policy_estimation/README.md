@@ -1,4 +1,4 @@
-# infinite-horizon-off-policy-estimation
+# infinite_horizon_off_policy_estimation
 This repository contains an implementation for following paper:
 [Breaking the Curse of Horizon: Infinite-Horizon Off-Policy Estimation](https://arxiv.org/abs/1810.12429)
 

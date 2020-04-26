@@ -21,37 +21,28 @@
             "args": []
         },
         {
-            "name": "Run all experiments",
+            "name": "Run single experiment",
             "type": "python",
             "request": "launch",
-            "program": "${cwd}/infinite-horizon-off-policy-estimation/taxi/run_exp.py",
+            "program": "${cwd}/run_tools.py",
             "console": "integratedTerminal",
-            "args": [],
-            "env":{
-                "PYTHONPATH": "${cwd}"
-            }
+            "args": []
         },
         {
-            "name": "Run graphs experiments",
+            "name": "Run new experiments, and plot",
             "type": "python",
             "request": "launch",
-            "program": "${cwd}/infinite-horizon-off-policy-estimation/taxi/run_graphs.py",
+            "program": "${cwd}/run_graphs_compare_both.py",
             "console": "integratedTerminal",
-            "args": [],
-            "env":{
-                "PYTHONPATH": "${cwd}"
-            }
+            "args": []
         },
         {
             "name": "Run estimate true value",
             "type": "python",
             "request": "launch",
-            "program": "${cwd}/infinite-horizon-off-policy-estimation/taxi/estimating_true_value.py",
+            "program": "${cwd}/estimating_true_value.py",
             "console": "integratedTerminal",
-            "args": [],
-            "env":{
-                "PYTHONPATH": "${cwd}"
-            }
+            "args": []
         }
     ]
 }

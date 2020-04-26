@@ -26,8 +26,8 @@ import six
 
 from typing import Any, Callable
 
-import policy as policy_lib
-import transition_data as transition_data_lib
+import dual_dice.policy as policy_lib
+import dual_dice.transition_data as transition_data_lib
 
 
 @six.add_metaclass(abc.ABCMeta)

@@ -31,7 +31,7 @@ import numpy as np
 import six
 from typing import Any, Callable, Iterable, Optional, Sequence, Tuple
 
-import policy as policy_lib
+from . import policy as policy_lib
 
 
 @attr.s

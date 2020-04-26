@@ -27,9 +27,9 @@ from __future__ import print_function
 
 import numpy as np
 
-import algos.base as base_algo
-import policy as policy_lib
-import transition_data as transition_data_lib
+import dual_dice.algos.base as base_algo
+import dual_dice.policy as policy_lib
+import dual_dice.transition_data as transition_data_lib
 
 
 class TabularDualDice(base_algo.BaseAlgo):

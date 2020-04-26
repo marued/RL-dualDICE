@@ -4,7 +4,7 @@ from functools import partial
 import numpy as np
 import matplotlib.pyplot as plt
 
-from run_exp import *
+from infinite_horizon_off_policy_estimation.taxi.experiments import roll_out, on_policy
 from run_graphs import run_seeds_in_parallel
 
 def on_policy_exe(n_state, n_action, env, pi_target, nt, ts, gm, k):
@@ -26,8 +26,8 @@ if __name__ == "__main__":
     n_action = env.n_action
 
     # Policies
-    pi_target = np.load(os.getcwd() + '/infinite-horizon-off-policy-estimation/taxi/taxi-policy/pi19.npy')
-    pi_behavior = np.load(os.getcwd() + '/infinite-horizon-off-policy-estimation/taxi/taxi-policy/pi18.npy')
+    pi_target = np.load(os.getcwd() + '/infinite_horizon_off_policy_estimation/taxi/taxi-policy/pi19.npy')
+    pi_behavior = np.load(os.getcwd() + '/infinite_horizon_off_policy_estimation/taxi/taxi-policy/pi18.npy')
 
     # Sampling vars
     ts = 400 # truncate_size

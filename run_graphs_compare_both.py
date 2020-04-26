@@ -1,28 +1,12 @@
-import concurrent.futures
-import multiprocessing
-from functools import partial
+import os
 import numpy as np
 import matplotlib.pyplot as plt
+from functools import partial
+import multiprocessing
 
-from run_exp import *
-
-def run_seeds_in_parallel(nb_processes, partial_fct, estimator_names, nb_seeds=12):
-    seeds = range(nb_seeds)
-
-    res = np.zeros((len(estimator_names), nb_seeds), dtype = np.float32)
-    with concurrent.futures.ProcessPoolExecutor(nb_processes) as executor:
-        for ret, k in executor.map(partial_fct, seeds):
-            res[:, k] = ret
-
-    for k in seeds:
-        print('------seed = {}------'.format(k))
-        for i in range(len(estimator_names)):
-            print('  ESTIMATOR: '+estimator_names[i]+ ', rewards = {}'.format(res[i,k]))
-        print('----------------------')
-        sys.stdout.flush()
-    
-    #executor.terminate()
-    return res
+from infinite_horizon_off_policy_estimation.taxi.environment import taxi
+from infinite_horizon_off_policy_estimation.taxi.experiments import roll_out
+from run_tools import run_wrapper, run_seeds_in_parallel
 
 def varying_number_trajectories(estimator_names, nt_list = [200, 500, 1000, 2000]):
     """
@@ -36,8 +20,8 @@ def varying_number_trajectories(estimator_names, nt_list = [200, 500, 1000, 2000
 
     # Policies
     alpha = 0.0 # mixture ratio
-    pi_target = np.load(os.getcwd() + '/infinite-horizon-off-policy-estimation/taxi/taxi-policy/pi19.npy')
-    pi_behavior = np.load(os.getcwd() + '/infinite-horizon-off-policy-estimation/taxi/taxi-policy/pi18.npy')
+    pi_target = np.load(os.getcwd() + '/infinite_horizon_off_policy_estimation/taxi/taxi-policy/pi19.npy')
+    pi_behavior = np.load(os.getcwd() + '/infinite_horizon_off_policy_estimation/taxi/taxi-policy/pi18.npy')
     pi_behavior = alpha * pi_target + (1-alpha) * pi_behavior
 
     # Sampling vars
@@ -49,15 +33,15 @@ def varying_number_trajectories(estimator_names, nt_list = [200, 500, 1000, 2000
     for idx, nt in enumerate(nt_list):
         lam_fct = partial(run_wrapper, n_state, n_action, env, roll_out, estimator_names, pi_behavior, 
                           pi_target, nt, ts, gm)
-        ret = run_seeds_in_parallel(int(multiprocessing.cpu_count() / 4), lam_fct, estimator_names)
+        ret = run_seeds_in_parallel(int(multiprocessing.cpu_count() / 4), lam_fct, estimator_names, nb_seeds)
         results[idx, :, :] = ret
 
     return results
 
 
-def varying_gamma(estimator_names, gm_list = [200, 500, 1000, 2000]):
+def varying_gamma(estimator_names, gm_list):
     """
-    Run multiple experiments that vary the number of trajectories
+    Run multiple experiments that vary the gamma values
     """
     # environment
     length = 5
@@ -67,8 +51,8 @@ def varying_gamma(estimator_names, gm_list = [200, 500, 1000, 2000]):
 
     # Policies
     alpha = 0.0 # mixture ratio
-    pi_target = np.load(os.getcwd() + '/infinite-horizon-off-policy-estimation/taxi/taxi-policy/pi19.npy')
-    pi_behavior = np.load(os.getcwd() + '/infinite-horizon-off-policy-estimation/taxi/taxi-policy/pi18.npy')
+    pi_target = np.load(os.getcwd() + '/infinite_horizon_off_policy_estimation/taxi/taxi-policy/pi19.npy')
+    pi_behavior = np.load(os.getcwd() + '/infinite_horizon_off_policy_estimation/taxi/taxi-policy/pi18.npy')
     pi_behavior = alpha * pi_target + (1-alpha) * pi_behavior
 
     # Sampling vars
@@ -78,16 +62,16 @@ def varying_gamma(estimator_names, gm_list = [200, 500, 1000, 2000]):
 
     results = np.zeros( (len(gm_list), len(estimator_names), nb_seeds) )
     for idx, gm in enumerate(gm_list):
-        lam_fct = partial(run_wrapper, n_state, n_action, env, roll_out, on_policy, estimator_names, pi_behavior, 
+        lam_fct = partial(run_wrapper, n_state, n_action, env, roll_out, estimator_names, pi_behavior, 
                           pi_target, nt, ts, gm)
-        ret = run_seeds_in_parallel(int(multiprocessing.cpu_count() / 4), lam_fct, estimator_names)
+        ret = run_seeds_in_parallel(int(multiprocessing.cpu_count() / 4), lam_fct, estimator_names, nb_seeds)
         results[idx, :, :] = ret
 
     return results
 
-def varying_target_mixture(estimator_names, alpha_list = [0.0, 0.2, 0.5, 0.7]):
+def varying_target_mixture(estimator_names, alpha_list):
     """
-    Run multiple experiments that vary the number of trajectories
+    Run multiple experiments that vary the alpha values used to mix policies
     """
     # environment
     length = 5
@@ -96,8 +80,8 @@ def varying_target_mixture(estimator_names, alpha_list = [0.0, 0.2, 0.5, 0.7]):
     n_action = env.n_action
 
     # Policies
-    pi_target = np.load(os.getcwd() + '/infinite-horizon-off-policy-estimation/taxi/taxi-policy/pi19.npy')
-    pi_behavior = np.load(os.getcwd() + '/infinite-horizon-off-policy-estimation/taxi/taxi-policy/pi18.npy')
+    pi_target = np.load(os.getcwd() + '/infinite_horizon_off_policy_estimation/taxi/taxi-policy/pi19.npy')
+    pi_behavior = np.load(os.getcwd() + '/infinite_horizon_off_policy_estimation/taxi/taxi-policy/pi18.npy')
 
     # Sampling vars
     ts = 400 # truncate_size
@@ -108,14 +92,17 @@ def varying_target_mixture(estimator_names, alpha_list = [0.0, 0.2, 0.5, 0.7]):
     results = np.zeros( (len(alpha_list), len(estimator_names), nb_seeds) )
     for idx, alpha in enumerate(alpha_list):
         pi_behavior = alpha * pi_target + (1-alpha) * pi_behavior
-        lam_fct = partial(run_wrapper, n_state, n_action, env, roll_out, on_policy, estimator_names, pi_behavior, 
+        lam_fct = partial(run_wrapper, n_state, n_action, env, roll_out, estimator_names, pi_behavior, 
                           pi_target, nt, ts, gm)
-        ret = run_seeds_in_parallel(int(multiprocessing.cpu_count() / 4), lam_fct, estimator_names)
+        ret = run_seeds_in_parallel(int(multiprocessing.cpu_count() / 4), lam_fct, estimator_names, nb_seeds)
         results[idx, :, :] = ret
 
     return results
 
 def varying_trajectories_and_alpha(estimator_names, nt_list, alpha_list):
+    """
+    Experiment when varying both number of trajectories and policy mixture
+    """
     # environment
     length = 5
     env = taxi(length)
@@ -123,35 +110,8 @@ def varying_trajectories_and_alpha(estimator_names, nt_list, alpha_list):
     n_action = env.n_action
 
     # Policies
-    pi_target = np.load(os.getcwd() + '/infinite-horizon-off-policy-estimation/taxi/taxi-policy/pi19.npy')
-    pi_behavior = np.load(os.getcwd() + '/infinite-horizon-off-policy-estimation/taxi/taxi-policy/pi18.npy')
-
-    # Sampling vars
-    ts = 400 # truncate_size
-    gm = 0.995
-    nb_seeds = 12
-
-    results = np.zeros( (len(alpha_list), len(nt_list), len(estimator_names), nb_seeds) )
-    for i, alpha in enumerate(alpha_list):
-        for j, nt in enumerate(nt_list):
-            pi_behavior = alpha * pi_target + (1-alpha) * pi_behavior
-            lam_fct = partial(run_wrapper, n_state, n_action, env, roll_out, on_policy, estimator_names, pi_behavior, 
-                            pi_target, nt, ts, gm)
-            ret = run_seeds_in_parallel(int(multiprocessing.cpu_count() / 4), lam_fct, estimator_names)
-            results[i, j, :, :] = ret
-
-    return results
-
-def varying_trajectories_and_alpha_distant_behavior_policy(estimator_names, nt_list, alpha_list):
-    # environment
-    length = 5
-    env = taxi(length)
-    n_state = env.n_state
-    n_action = env.n_action
-
-    # Policies
-    pi_target = np.load(os.getcwd() + '/infinite-horizon-off-policy-estimation/taxi/taxi-policy/pi19.npy')
-    pi_behavior = np.load(os.getcwd() + '/infinite-horizon-off-policy-estimation/taxi/taxi-policy/pi13.npy')
+    pi_target = np.load(os.getcwd() + '/infinite_horizon_off_policy_estimation/taxi/taxi-policy/pi19.npy')
+    pi_behavior = np.load(os.getcwd() + '/infinite_horizon_off_policy_estimation/taxi/taxi-policy/pi18.npy')
 
     # Sampling vars
     ts = 400 # truncate_size
@@ -164,7 +124,38 @@ def varying_trajectories_and_alpha_distant_behavior_policy(estimator_names, nt_l
             pi_behavior = alpha * pi_target + (1-alpha) * pi_behavior
             lam_fct = partial(run_wrapper, n_state, n_action, env, roll_out, estimator_names, pi_behavior, 
                             pi_target, nt, ts, gm)
-            ret = run_seeds_in_parallel(int(multiprocessing.cpu_count() / 2), lam_fct, estimator_names)
+            ret = run_seeds_in_parallel(int(multiprocessing.cpu_count() / 4), lam_fct, estimator_names, nb_seeds)
+            results[i, j, :, :] = ret
+
+    return results
+
+def varying_trajectories_and_alpha_distant_behavior_policy(estimator_names, nt_list, alpha_list):
+    """
+    Same as varying_trajectories_and_alpha, but we choose a behavior policy that is 
+    much different from the target one.
+    """
+    # environment
+    length = 5
+    env = taxi(length)
+    n_state = env.n_state
+    n_action = env.n_action
+
+    # Policies
+    pi_target = np.load(os.getcwd() + '/infinite_horizon_off_policy_estimation/taxi/taxi-policy/pi19.npy')
+    pi_behavior = np.load(os.getcwd() + '/infinite_horizon_off_policy_estimation/taxi/taxi-policy/pi13.npy')
+
+    # Sampling vars
+    ts = 400 # truncate_size
+    gm = 0.995
+    nb_seeds = 12
+
+    results = np.zeros( (len(alpha_list), len(nt_list), len(estimator_names), nb_seeds) )
+    for i, alpha in enumerate(alpha_list):
+        for j, nt in enumerate(nt_list):
+            pi_behavior = alpha * pi_target + (1-alpha) * pi_behavior
+            lam_fct = partial(run_wrapper, n_state, n_action, env, roll_out, estimator_names, pi_behavior, 
+                            pi_target, nt, ts, gm)
+            ret = run_seeds_in_parallel(int(multiprocessing.cpu_count() / 2), lam_fct, estimator_names, nb_seeds)
             results[i, j, :, :] = ret
 
     return results
@@ -177,8 +168,8 @@ def varying_trajectories_and_length(estimator_names, nt_list, ts_list):
     n_action = env.n_action
 
     # Policies
-    pi_target = np.load(os.getcwd() + '/infinite-horizon-off-policy-estimation/taxi/taxi-policy/pi19.npy')
-    pi_behavior = np.load(os.getcwd() + '/infinite-horizon-off-policy-estimation/taxi/taxi-policy/pi18.npy')
+    pi_target = np.load(os.getcwd() + '/infinite_horizon_off_policy_estimation/taxi/taxi-policy/pi19.npy')
+    pi_behavior = np.load(os.getcwd() + '/infinite_horizon_off_policy_estimation/taxi/taxi-policy/pi18.npy')
 
     # Sampling vars
     alpha = 0.0
@@ -189,9 +180,9 @@ def varying_trajectories_and_length(estimator_names, nt_list, ts_list):
     for i, nt in enumerate(nt_list):
         for j, ts in enumerate(ts_list):
             pi_behavior = alpha * pi_target + (1-alpha) * pi_behavior
-            lam_fct = partial(run_wrapper, n_state, n_action, env, roll_out, on_policy, estimator_names, pi_behavior, 
+            lam_fct = partial(run_wrapper, n_state, n_action, env, roll_out, estimator_names, pi_behavior, 
                             pi_target, nt, ts, gm)
-            ret = run_seeds_in_parallel(int(multiprocessing.cpu_count() / 2), lam_fct, estimator_names)
+            ret = run_seeds_in_parallel(int(multiprocessing.cpu_count() / 2), lam_fct, estimator_names, nb_seeds)
             results[i, j, :, :] = ret
 
     return results
@@ -202,7 +193,7 @@ if __name__ == "__main__":
     if not os.path.exists(os.getcwd() + "/result"):
             os.mkdir(os.getcwd() + "/result")
 
-    run_data_gen = False
+    run_data_gen = True
     nt_list = [200, 500, 1000, 2000]
     gm_list = [0.999, 0.9, 0.8, 0.7, 0.5]
     alpha_list = [0.0, 0.2, 0.5, 0.7]
