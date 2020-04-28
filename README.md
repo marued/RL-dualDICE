@@ -35,3 +35,6 @@ We integrated multiprocessing to run experiments faster and made some changes to
 ```
 python3 run_graphs_compare_both.py
 ```
+
+### More information
+Here is a small video explaining the goal of the project: https://youtu.be/no-JKqfD0zw
