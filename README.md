@@ -38,3 +38,4 @@ python3 run_graphs_compare_both.py
 
 ### More information
 Here is a small video explaining the goal of the project: https://youtu.be/no-JKqfD0zw
+It's possible to refer our small analisys in the fallowing document: https://github.com/marued/RL-dualDICE/blob/master/COMP767_Project.pdf
